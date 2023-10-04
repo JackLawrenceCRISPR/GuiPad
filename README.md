@@ -2,9 +2,11 @@
 A simple module to use your gamepad as a mouse with pygame and PyAutoGUI.
 
 # Installation
-Use ```pip install GuiPad``` in your Operating System terminal
+*Download GuiPad.py and run it with python.*
 
-In a python terminal or script:  
+**OR**
+
+Use ```pip install GuiPad``` in your Operating System terminal, then in a python terminal or script:  
 ```python
 import GuiPad
 GuiPad.GuiPad()
@@ -13,7 +15,7 @@ GuiPad.GuiPad()
 # Configuration
 A csettings.ini file can be used in Guipad.Guipad("PathToSettings.ini") for additional customisation.
 
-Generate a standard file using:
+Generate a standard settings file using:
 ```python
 import os
 import GuiPad
