@@ -9,8 +9,8 @@
 
 
 ## Installation
+**Make sure that pygame is at least version 2.0**  
 *Download GuiPad.py and run it with python.*  
-
 **OR**  
 Use ```pip install GuiPad``` in your Operating System terminal, then in a python terminal or script:  
 ```python
