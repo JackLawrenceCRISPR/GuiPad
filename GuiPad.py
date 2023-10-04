@@ -232,7 +232,7 @@ def MakeGuiPadini(Directory:str=None,Name:str="GuiPad.ini"):
 
     with open(os.path.join(Directory,Name), 'w') as ini:
         ini.writelines([
-            "[Settings]",
+            "[Settings] \n",
             "#ONLY INTEGERS ARE ACCEPTED! \n",
             "MouseSensitivity = 60 \n",
             "ScrollSpeed = 100 \n",
