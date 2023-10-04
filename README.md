@@ -17,6 +17,7 @@ Use ```pip install GuiPad``` in your Operating System terminal, then in a python
 import GuiPad
 GuiPad.GuiPad()
 ```
+https://pypi.org/project/GuiPad/
 
 ## Configuration
 A settings.ini file can be used in Guipad.Guipad("PathToSettings.ini") for additional customisation.  
