@@ -13,21 +13,31 @@ def GuiPad(GuiPadiniFile:str = None):
     import os
     import configparser
     config = configparser.ConfigParser()
-
-    #Non-core dependencies (with auto-installer backup! neat)
+#Non-core dependencies (with auto-installer backup! neat)
     def QuickInstallModule(ModuleName):
         print(f"{ModuleName} module not found, would you like to install? [Y/N]")
         if input()[:1].lower()==("y"):
             subprocess.run([sys.executable, "-m", "pip", "install", ModuleName], check=True) 
         else:
             raise ImportError(f"Please install {ModuleName} with >pip install {ModuleName}")
-
-    try:
+            
+    try: #specifically to catch pygame errors from Raspberry Pi's where PiOs uses outdated pygame version 1.9.0!
         import pygame
     except ImportError:
         QuickInstallModule("pygame")
         import pygame
-
+    if pygame.version.ver[:2] == "1.":
+        print("Pygame module must be at least Version 2.0.0, can Python upgrade pygame? [Y/N]")
+        if input()[:1].lower()==("y"):
+            try:
+                import pip
+                pip.main(['install', '--upgrade', "pygame"])
+            except ImportError:
+                raise ImportError('Pygame has failed to upgrade. Please "pip install pygame -U" in your OS terminal.')
+            finally:
+                raise ImportError('Please restart GuiPad.')
+        else:
+            raise ImportError('Pygame must be at least Version 2.0.0! Please "pip install pygame -U" in your OS terminal.')
     try:
         import pyautogui
     except ImportError:
@@ -35,6 +45,15 @@ def GuiPad(GuiPadiniFile:str = None):
         import pyautogui
 
 ##Variables
+    #pygame
+    pyautogui.PAUSE = 0.01
+    ButtonDelayTime = 0.2
+    #Initialise    
+    pyautogui.FAILSAFE = False  #uh oh :^)
+    PrintDebugInfo = False      #very messy
+    pygame.init()
+    GuiPadLeftMouseIsDown = [False] # this is a dumb hack instead of using a global variable - you WILL lose IQ if you read this
+
     #Config
     MouseSensitivity = int(60)/10
     ScrollSpeed = int(100)
@@ -43,6 +62,10 @@ def GuiPad(GuiPadiniFile:str = None):
     DeadzoneL = int(40)/1000
     DeadzoneR = int(450)/1000
     FPSTime = int(1600)/1000000  #60 FPS by default
+    Axis2IsLeftTrigger = "Auto"   #Autoconfigure
+    AutoAxis2Clock = [100]
+    AutoAxis2Counter = [0]
+    AutoAxis2SwapThreshold = 15
 
     if not GuiPadiniFile is None:
         if GuiPadiniFile == "cwd":
@@ -56,17 +79,28 @@ def GuiPad(GuiPadiniFile:str = None):
             DeadzoneL = int(config["Settings"]["DeadzoneL"])/1000
             DeadzoneR = int(config["Settings"]["DeadzoneR"])/1000
             FPSTime = int(config["Settings"]["FPSTime"])/1000000
+            Axis2IsLeftTrigger = config["Settings"]["Axis2IsLeftTrigger"]
+            if Axis2IsLeftTrigger.lower().strip() == "true":
+                Axis2IsLeftTrigger = True
+            elif Axis2IsLeftTrigger.lower().strip() == "false":
+                Axis2IsLeftTrigger = False
+            else:
+                Axis2IsLeftTrigger = "Auto"
+                AutoAxis2Clock[0] = 30
+                AutoAxis2Counter = [0]
             print("GuiPad.ini loaded!")
         else:
             print("GuiPad.ini not found, using default setting values.")
 
-    pyautogui.PAUSE = 0.01
-    ButtonDelayTime = 0.2
-    #Initialise    
-    pyautogui.FAILSAFE = False  #uh oh :^)
-    PrintDebugInfo = False      #very messy
-    pygame.init()
-    GuiPadLeftMouseIsDown = [False] # this is a dumb hack instead of using a global variable - you WILL lose IQ if you read this
+    if Axis2IsLeftTrigger == True:
+        RStickXIndex = [3]
+        RStickYIndex = [4]
+        LTriggerIndex = [2]
+    else:
+        #default
+        RStickXIndex = [2]
+        RStickYIndex = [3]
+        LTriggerIndex = [4]
 
 ##Button bindings
     def pressB0(): #Cross button
@@ -96,7 +130,7 @@ def GuiPad(GuiPadiniFile:str = None):
 
 ## Input handling
     def HandleControllerButtons(joystick, ButtonID, Pressed, ButtonDelay): #"joystick" argument only included for consistency
-        if Pressed == 1 and ButtonDelay < 0:
+        if Pressed == 1 and ButtonDelay < 0 and not len(ListOfButtonFunctions)>ButtonID:
             ListOfButtonFunctions[ButtonID]()
             #print(ButtonID) #, Pressed)
             return ButtonDelayTime
@@ -128,14 +162,25 @@ def GuiPad(GuiPadiniFile:str = None):
         return ButtonDelay
     
     def HandleControllerSticks(joystick, axes, ButtonDelay):
+        if AutoAxis2Clock[0] > 0:
+            AutoAxis2Clock[0]-=1
+            if AutoAxis2Counter[0] > AutoAxis2SwapThreshold:
+                print("Right stick is stuck down!? Swapping axis mode.")
+                print("If you see this a lot try MakeGuiPadini() and setting: Axis2IsLeftTrigger = true then passing the path to the ini file through GuiPad(here)")
+                #we've detected a problem! try flipping it
+                RStickXIndex[0] = 3
+                RStickYIndex[0] = 4
+                LTriggerIndex[0] = 2
+                AutoAxis2Clock[0] = 0
+
         CanScrollSideways = True
         try:
             if joystick.get_axis(3):
-                if abs(float(f"{joystick.get_axis(3):>6.3f}")) > 0.3:       #is this causing crash?
+                if abs(float(f"{joystick.get_axis(RStickYIndex[0]):>6.3f}")) > 0.3:       #is this causing crash?
                     CanScrollSideways = False
         finally:
             XToMoveMouse = 0
-        TriggerStates=[joystick.get_axis(4),joystick.get_axis(5)]
+        TriggerStates=[joystick.get_axis(LTriggerIndex[0]),joystick.get_axis(5)]
 
         for i in range(axes):
             Stick = i 
@@ -158,7 +203,7 @@ def GuiPad(GuiPadiniFile:str = None):
                     pyautogui.move(MouseSensitivity*XMoveFinal*(SlowerSpeed+0.1), MouseSensitivity*YMoveFinal*(SlowerSpeed+0.1))            
                     XToMoveMouse = 0
                 
-                elif Stick == 2 and ButtonDelay<=0 and CanScrollSideways:
+                elif Stick == RStickXIndex[0] and ButtonDelay<=0 and CanScrollSideways:
                     if Dir > DeadzoneR :
                         pyautogui.press("right")
                         ButtonDelay = (1-abs(Dir))*0.25*ScrollSpeed/100
@@ -166,17 +211,21 @@ def GuiPad(GuiPadiniFile:str = None):
                         pyautogui.press("left")
                         ButtonDelay = (1-abs(Dir))*0.25*ScrollSpeed/100
                 
-                elif Stick == 3 and ButtonDelay<=0:
+                elif Stick == RStickYIndex[0] and ButtonDelay<=0:
                     if Dir > DeadzoneR :
                         pyautogui.press("down")
                         ButtonDelay = (1-abs(Dir))*0.25*ScrollSpeed/100
+                        print(AutoAxis2Clock[0])
+                        if AutoAxis2Clock[0] > 0:
+                            AutoAxis2Counter[0]+=1
+                            print(AutoAxis2Counter)
+
                     elif Dir < -DeadzoneR:
                         pyautogui.press("up")
                         ButtonDelay = (1-abs(Dir))*0.25*ScrollSpeed/100
                 if PrintDebugInfo:
                     print(Stick, Dir)
         return ButtonDelay
-
 ##Core script
     joysticks = {}
     ButtonDelay = 0.1
@@ -194,7 +243,6 @@ def GuiPad(GuiPadiniFile:str = None):
                 del joysticks[event.instance_id]
                 if PrintDebugInfo:
                     print(f"Joystick {event.instance_id} disconnected")
-
 #Detect inputs:         
         for joystick in joysticks.values():
             axes = joystick.get_numaxes()
@@ -242,7 +290,9 @@ def MakeGuiPadini(Directory:str=None,Name:str="GuiPad.ini"):
             "DeadzoneL = 40 \n",
             "DeadzoneR = 450 \n",
             "#FPSTime is /1000000, so 1600 is 60FPS \n",
-            "FPSTime = 1600 \n"
+            "FPSTime = 1600 \n",
+            '#Some gamepads make Axis 3 Right Trigger instead of Right Stick X. If you have problems, try setting Axis2IsLeftTrigger to "True" or "False": \n'
+            "Axis2IsLeftTrigger = Auto"
         ])
     print(f"GuiPad.ini file written to {os.path.join(Directory,Name)}")
 
