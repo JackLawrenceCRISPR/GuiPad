@@ -1,3 +1,31 @@
+##Dependencies
+import subprocess
+import sys
+import time
+import os
+import configparser
+config = configparser.ConfigParser()
+
+#Non-core dependencies (with auto-installer backup! neat)
+def QuickInstallModule(ModuleName):
+    print(f"{ModuleName} module not found, would you like to install? [Y/N]")
+    if input()[:1].lower()==("y"):
+        subprocess.run([sys.executable, "-m", "pip", "install", ModuleName], check=True) 
+    else:
+        raise ImportError(f"Please install {ModuleName} with >pip install {ModuleName}")
+
+try:
+    import pygame
+except ImportError:
+    QuickInstallModule("pygame")
+    import pygame
+
+try:
+    import pyautogui
+except ImportError:
+    QuickInstallModule("pyautogui")
+    import pyautogui
+
 def GuiPad(GuiPadiniFile:str = None):
     """GuiPad is a simple module for using your Gamepad on your desktop. \n
     Gamepad inputs are detected by pygame: https://www.pygame.org/docs/ref/joystick.html \n
@@ -6,33 +34,6 @@ def GuiPad(GuiPadiniFile:str = None):
     Args:
         SettingsFile (str, optional): Path of a custom GuiPad.ini file. Construct with os.path.join("C://path","to","file.ini") for safety!
     """
-##Dependencies
-    import subprocess
-    import sys
-    import time
-    import os
-    import configparser
-    config = configparser.ConfigParser()
-
-    #Non-core dependencies (with auto-installer backup! neat)
-    def QuickInstallModule(ModuleName):
-        print(f"{ModuleName} module not found, would you like to install? [Y/N]")
-        if input()[:1].lower()==("y"):
-            subprocess.run([sys.executable, "-m", "pip", "install", ModuleName], check=True) 
-        else:
-            raise ImportError(f"Please install {ModuleName} with >pip install {ModuleName}")
-    
-    try:
-        import pygame
-    except ImportError:
-        QuickInstallModule("pygame")
-        import pygame
-    
-    try:
-        import pyautogui
-    except ImportError:
-        QuickInstallModule("pyautogui")
-        import pyautogui
 
 ##Variables
     #Config
@@ -226,7 +227,6 @@ def MakeGuiPadini(Directory:str=None,Name:str="GuiPad.ini"):
         Directory (str, optional): Directory where the ini file will be generated. Defaults to current work directory. Construct with os.path.join("C://path","to","file.ini") for safety!
         Name (str, optional): Name of the GuiPad.ini file. Defaults to "GuiPad.ini".
     """
-    import os
     if Directory is None:
         Directory = os.getcwd() #just dump it in their cwd
 
