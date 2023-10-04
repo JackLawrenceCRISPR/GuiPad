@@ -51,3 +51,6 @@ _Path = os.path.join("C:\\Users","JackLawrenceCRISPR","Desktop","Folder","GuiPad
 | Right stick | Alt + Right | Go forward |
 | Select button | Ctrl + C | Copy |
 | Start button | Ctrl + V | Paste |
+
+**Do not hold the right stick down on startup.**  
+It's used in a neat hack to automatically detect your controller type.
