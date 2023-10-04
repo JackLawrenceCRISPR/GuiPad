@@ -1,31 +1,3 @@
-##Dependencies
-import subprocess
-import sys
-import time
-import os
-import configparser
-config = configparser.ConfigParser()
-
-#Non-core dependencies (with auto-installer backup! neat)
-def QuickInstallModule(ModuleName):
-    print(f"{ModuleName} module not found, would you like to install? [Y/N]")
-    if input()[:1].lower()==("y"):
-        subprocess.run([sys.executable, "-m", "pip", "install", ModuleName], check=True) 
-    else:
-        raise ImportError(f"Please install {ModuleName} with >pip install {ModuleName}")
-
-try:
-    import pygame
-except ImportError:
-    QuickInstallModule("pygame")
-    import pygame
-
-try:
-    import pyautogui
-except ImportError:
-    QuickInstallModule("pyautogui")
-    import pyautogui
-
 def GuiPad(GuiPadiniFile:str = None):
     """GuiPad is a simple module for using your Gamepad on your desktop. \n
     Gamepad inputs are detected by pygame: https://www.pygame.org/docs/ref/joystick.html \n
@@ -34,6 +6,33 @@ def GuiPad(GuiPadiniFile:str = None):
     Args:
         SettingsFile (str, optional): Path of a custom GuiPad.ini file. Construct with os.path.join("C://path","to","file.ini") for safety!
     """
+##Dependencies
+    import subprocess
+    import sys
+    import time
+    import os
+    import configparser
+    config = configparser.ConfigParser()
+
+    #Non-core dependencies (with auto-installer backup! neat)
+    def QuickInstallModule(ModuleName):
+        print(f"{ModuleName} module not found, would you like to install? [Y/N]")
+        if input()[:1].lower()==("y"):
+            subprocess.run([sys.executable, "-m", "pip", "install", ModuleName], check=True) 
+        else:
+            raise ImportError(f"Please install {ModuleName} with >pip install {ModuleName}")
+
+    try:
+        import pygame
+    except ImportError:
+        QuickInstallModule("pygame")
+        import pygame
+
+    try:
+        import pyautogui
+    except ImportError:
+        QuickInstallModule("pyautogui")
+        import pyautogui
 
 ##Variables
     #Config
@@ -228,21 +227,22 @@ def MakeGuiPadini(Directory:str=None,Name:str="GuiPad.ini"):
         Name (str, optional): Name of the GuiPad.ini file. Defaults to "GuiPad.ini".
     """
     if Directory is None:
+        import os
         Directory = os.getcwd() #just dump it in their cwd
 
     with open(os.path.join(Directory,Name), 'w') as ini:
         ini.writelines([
             "[Settings]",
-            "#ONLY INTEGERS ARE ACCEPTED!",
-            "MouseSensitivity = 60",
-            "ScrollSpeed = 100",
-            "BonusSpeed = 240",
-            "SlowMultiplier = 25",
-            "#Deadzones are /10 where 100 is 100%",
-            "DeadzoneL = 40",
-            "DeadzoneR = 450",
-            "#FPSTime is /1000000, so 1600 is 60FPS",
-            "FPSTime = 1600"
+            "#ONLY INTEGERS ARE ACCEPTED! \n",
+            "MouseSensitivity = 60 \n",
+            "ScrollSpeed = 100 \n",
+            "BonusSpeed = 240 \n",
+            "SlowMultiplier = 25 \n",
+            "#Deadzones are /10 where 100 is 100% \n",
+            "DeadzoneL = 40 \n",
+            "DeadzoneR = 450 \n",
+            "#FPSTime is /1000000, so 1600 is 60FPS \n",
+            "FPSTime = 1600 \n"
         ])
     print(f"GuiPad.ini file written to {os.path.join(Directory,Name)}")
 
