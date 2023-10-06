@@ -1,8 +1,8 @@
 <h1 align="center">GuiPad</h1>
 <p align="center">
   <picture>
-    <source srcset="./GuiPad_Icon.ico"> 
-    <img src="./GuiPad_Icon.ico">
+    <source width="500" height="500" srcset="Icons/GuiPad_Logo.svg"> 
+    <img width="500" height="500" src="Icons/GuiPad_Logo.svg">
   </picture>
 </p>
 <h3 align="center">Use your gamepad as a mouse with pygame and PyAutoGUI.</h3>
