@@ -1,3 +1,17 @@
+import os
+
+GamepadMaps = {
+    'ljoycon': [[1, 0], [0, 1, 2, 3, 4, 5, False, False, 6, False, 8, False, False, 7, 9, 10]], 
+    'rjoycon': [[1, 0], [0, 1, 2, 3, 4, 5, False, False, False, 6, False, 8, 7, False, 9, 10]], 
+    'switchpro': [[0, 1, 2, 3, 4, 5], [0, 1, 2, 3, 6, 10, 7, 8, 9, 4, 5, False, False, False, False, 11], [0, 1, 2, 3]],  #12,13,14,15
+    'xbox_windows': [[0, 1, 2, 3, 4, 5], [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [1, 0]], 
+    'xbox': [[0, 1, 4, 2, 3, 5], [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [1, 0]], 
+    'ps4': [[0, 1, 2, 3, 4, 5], [0, 1, 2, 3, 6, 7, 10, 8, 9, 4, 5, False, False, False, False, 11], [3, 2, 0, 1]], 
+    'ps5': [[0, 1, 4, 2, 3, 5], [0, 1, 2, 3, 4, 5, False, False, 6, 7, 10, 8, 9], [1, 0]], 
+    'xbox_pygame1x': [[0, 1, 5, 3, 2], [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], [1, 0]], 
+    'ps4_pygame1x': [[0, 1, 2, 3, 5, 4], [0, 1, 2, 3, 4, 5, False, False, 6, 7, 8, 9, 10, 11], [1, 0]]
+}
+
 def GuiPad(GuiPadiniFile:str = None):
     """GuiPad is a simple module for using your Gamepad on your desktop. \n
     Gamepad inputs are detected by pygame: https://www.pygame.org/docs/ref/joystick.html \n
@@ -10,7 +24,6 @@ def GuiPad(GuiPadiniFile:str = None):
     import subprocess
     import sys
     import time
-    import os
     import configparser
     config = configparser.ConfigParser()
 #Non-core dependencies (with auto-installer backup! neat)
@@ -44,6 +57,10 @@ def GuiPad(GuiPadiniFile:str = None):
         QuickInstallModule("pyautogui")
         import pyautogui
 
+
+
+
+
 ##Variables
     #pygame
     pyautogui.PAUSE = 0.01
@@ -62,10 +79,7 @@ def GuiPad(GuiPadiniFile:str = None):
     DeadzoneL = int(40)/1000
     DeadzoneR = int(450)/1000
     FPSTime = int(1600)/1000000  #60 FPS by default
-    Axis2IsLeftTrigger = "Auto"   #Autoconfigure
-    AutoAxis2Clock = [100]
-    AutoAxis2Counter = [0]
-    AutoAxis2SwapThreshold = 15
+    RebindButtons = False
 
     if not GuiPadiniFile is None:
         if GuiPadiniFile == "cwd":
@@ -79,28 +93,10 @@ def GuiPad(GuiPadiniFile:str = None):
             DeadzoneL = int(config["Settings"]["DeadzoneL"])/1000
             DeadzoneR = int(config["Settings"]["DeadzoneR"])/1000
             FPSTime = int(config["Settings"]["FPSTime"])/1000000
-            Axis2IsLeftTrigger = config["Settings"]["Axis2IsLeftTrigger"]
-            if Axis2IsLeftTrigger.lower().strip() == "true":
-                Axis2IsLeftTrigger = True
-            elif Axis2IsLeftTrigger.lower().strip() == "false":
-                Axis2IsLeftTrigger = False
-            else:
-                Axis2IsLeftTrigger = "Auto"
-                AutoAxis2Clock[0] = 30
-                AutoAxis2Counter = [0]
+            RebindButtons = config["Settings"]["RebindButtons"]
             print("GuiPad.ini loaded!")
         else:
             print("GuiPad.ini not found, using default setting values.")
-
-    if Axis2IsLeftTrigger == True:
-        RStickXIndex = [3]
-        RStickYIndex = [4]
-        LTriggerIndex = [2]
-    else:
-        #default
-        RStickXIndex = [2]
-        RStickYIndex = [3]
-        LTriggerIndex = [4]
 
 ##Button bindings
     def pressB0(): #Cross button
@@ -125,12 +121,38 @@ def GuiPad(GuiPadiniFile:str = None):
     def pressB8(): #Left Sitck button
         pyautogui.hotkey('alt', 'left')    
     def pressB9(): #Right Stick button
-        pyautogui.hotkey('alt', 'right')    
+        pyautogui.hotkey('alt', 'right')
+    def pressB10(): #Undefined
+        print("Button pressed!")
+    def pressB11(): #Undefined
+        print("Button pressed!")
+    def pressB12(): #Undefined
+        print("Button pressed!")
+    def pressB13(): #Undefined
+        print("Button pressed!")
+    def pressB14(): #Undefined
+        print("Button pressed!")
+    def pressB15(): #Undefined
+        print("Button pressed!")
+
     ListOfButtonFunctions = [pressB0,pressB1,pressB2,pressB3,pressB4,pressB5,pressB6,pressB7,pressB8,pressB9]
 
+    try:
+        if RebindButtons != "false" and RebindButtons != "False" and not RebindButtons is None:
+            ListOfButtonFunctions = []
+            print("Rebinding buttons.")
+            while RebindButtons.find("|") > -1:
+                ListOfButtonFunctions.append(locals()["press"+RebindButtons[:RebindButtons.find("|")]])
+                RebindButtons = RebindButtons[RebindButtons.find("|")+1:]
+    except:
+        ListOfButtonFunctions = [pressB0,pressB1,pressB2,pressB3,pressB4,pressB5,pressB6,pressB7,pressB8,pressB9]
+
+
+
 ## Input handling
-    def HandleControllerButtons(joystick, ButtonID, Pressed, ButtonDelay): #"joystick" argument only included for consistency
-        if Pressed == 1 and ButtonDelay < 0 and not len(ListOfButtonFunctions)>ButtonID:
+    def HandleControllerButtons(joystick, joystickMAP, ButtonID, Pressed, ButtonDelay): #"joystick" argument only included for consistency
+        ButtonID = joystickMAP[ButtonID]
+        if Pressed == 1 and ButtonDelay < 0 and len(ListOfButtonFunctions)>=ButtonID:
             ListOfButtonFunctions[ButtonID]()
             #print(ButtonID) #, Pressed)
             return ButtonDelayTime
@@ -139,9 +161,10 @@ def GuiPad(GuiPadiniFile:str = None):
             GuiPadLeftMouseIsDown[0] = False
         return ButtonDelay
     
-    def HandleDPad(joystick, hats, ButtonDelay):
+    def HandleDPad(joystick, joystickMAP, hats, ButtonDelay):
         for i in range(hats):
                 if ButtonDelay < 0:
+                                                                                                            #WRITE CODE IN HERE TO HAND THE SWTICH BUTTON HATS
                     hat = joystick.get_hat(i)
                     if hat[0] == -1:
                         #left
@@ -161,29 +184,19 @@ def GuiPad(GuiPadiniFile:str = None):
                         return ButtonDelayTime
         return ButtonDelay
     
-    def HandleControllerSticks(joystick, axes, ButtonDelay):
-        if AutoAxis2Clock[0] > 0:
-            AutoAxis2Clock[0]-=1
-            if AutoAxis2Counter[0] > AutoAxis2SwapThreshold:
-                print("Right stick is stuck down!? Swapping axis mode.")
-                print("If you see this a lot try MakeGuiPadini() and setting: Axis2IsLeftTrigger = true then passing the path to the ini file through GuiPad(here)")
-                #we've detected a problem! try flipping it
-                RStickXIndex[0] = 3
-                RStickYIndex[0] = 4
-                LTriggerIndex[0] = 2
-                AutoAxis2Clock[0] = 0
+    def HandleControllerSticks(joystick, joystickMAP, axes, ButtonDelay):
 
         CanScrollSideways = True
         try:
-            if joystick.get_axis(3):
-                if abs(float(f"{joystick.get_axis(RStickYIndex[0]):>6.3f}")) > 0.3:       #is this causing crash?
+            if joystick.get_axis( joystickMAP[3] ):
+                if abs(float(f"{joystick.get_axis( joystickMAP[3] ):>6.3f}")) > 0.3:       #is this causing crash?
                     CanScrollSideways = False
         finally:
             XToMoveMouse = 0
-        TriggerStates=[joystick.get_axis(LTriggerIndex[0]),joystick.get_axis(5)]
+        TriggerStates=[joystick.get_axis( joystickMAP[4] ),joystick.get_axis( joystickMAP[5] )]
 
         for i in range(axes):
-            Stick = i 
+            Stick = joystickMAP[i] 
             axis = joystick.get_axis(i)
             Dir = float(f"{axis:>6.3f}")
             if PrintDebugInfo:
@@ -203,7 +216,7 @@ def GuiPad(GuiPadiniFile:str = None):
                     pyautogui.move(MouseSensitivity*XMoveFinal*(SlowerSpeed+0.1), MouseSensitivity*YMoveFinal*(SlowerSpeed+0.1))            
                     XToMoveMouse = 0
                 
-                elif Stick == RStickXIndex[0] and ButtonDelay<=0 and CanScrollSideways:
+                elif Stick == 2 and ButtonDelay<=0 and CanScrollSideways:
                     if Dir > DeadzoneR :
                         pyautogui.press("right")
                         ButtonDelay = (1-abs(Dir))*0.25*ScrollSpeed/100
@@ -211,14 +224,10 @@ def GuiPad(GuiPadiniFile:str = None):
                         pyautogui.press("left")
                         ButtonDelay = (1-abs(Dir))*0.25*ScrollSpeed/100
                 
-                elif Stick == RStickYIndex[0] and ButtonDelay<=0:
+                elif Stick == 3 and ButtonDelay<=0:
                     if Dir > DeadzoneR :
                         pyautogui.press("down")
                         ButtonDelay = (1-abs(Dir))*0.25*ScrollSpeed/100
-                        print(AutoAxis2Clock[0])
-                        if AutoAxis2Clock[0] > 0:
-                            AutoAxis2Counter[0]+=1
-                            print(AutoAxis2Counter)
 
                     elif Dir < -DeadzoneR:
                         pyautogui.press("up")
@@ -226,9 +235,81 @@ def GuiPad(GuiPadiniFile:str = None):
                 if PrintDebugInfo:
                     print(Stick, Dir)
         return ButtonDelay
-##Core script
+
+#Gamepad Mapping
+    def GetGamepadMapIDFromName(UserGamepadName,UserGamepadInputCounts):
+        originalwd = os.getcwd()
+        os.chdir( os.path.dirname(os.path.realpath(__file__)) )
+        RawGamepadMappingSettings = []
+        if os.path.exists(os.path.join(os.getcwd(),"GamepadMappings.py")):
+            with open("GamepadMappings.py", "r") as gamepadmappingfile:
+                for line in gamepadmappingfile:
+                    RawGamepadMappingSettings.append(line.strip())
+        os.chdir(originalwd)
+        originalwd = None
+
+        for l in RawGamepadMappingSettings:
+            if l.find("!!!@")>-1:
+                LineGamepadName = l[:l.find("!!!@")].strip() 
+                if UserGamepadName.strip()  == LineGamepadName:
+                    return l[l.find("!!!@")+4:].strip()
+
+        print("Gamepad map not defined, automatically predicting appropriate map...")
+
+        UserGamepadName = UserGamepadName.lower()
+        ##Guess gamepad map by name of the gamepad...
+        import platform
+        if UserGamepadName.find("xbox")>-1 or UserGamepadName.find("microsoft")>-1 or UserGamepadName.find("horipad")>-1:
+            if platform.system().lower().find("window")>-1:
+                return "xbox_windows" #it probably uses DirectInput instead of XInput?
+            return "xbox"
+        if UserGamepadName.find("ps4")>-1 or UserGamepadName.find("dualshock4")>-1 or UserGamepadName.find("dualshock 4")>-1 or UserGamepadName.find("playstation 4")>-1 or UserGamepadName.find("playstation4")>-1:
+            return "ps4"
+        if UserGamepadName.find("ps5")>-1 or UserGamepadName.find("dualshock5")>-1 or UserGamepadName.find("dualshock 5")>-1 or UserGamepadName.find("playstation 5")>-1 or UserGamepadName.find("playstation5")>-1:
+            return "ps5"
+        if UserGamepadName.find("ps3")>-1 or UserGamepadName.find("dualshock3")>-1 or UserGamepadName.find("dualshock 3")>-1 or UserGamepadName.find("sony")>-1 or UserGamepadName.find("playstation 3")>-1 or UserGamepadName.find("playstation3")>-1:
+            return "ps4"    #ps3 controllers map as ps4
+        if UserGamepadName.find("joycon")>-1:
+            if UserGamepadName.find("left")>-1:
+                return "ljoycon"
+            else:
+                return "rjoycon"
+        if UserGamepadName.find("switch")>-1 and UserGamepadName.find("pro")>-1:
+            return "switchpro"
+
+        #we didn't find any keywords in the gamepad name!
+        #now guess gamepad map by number of axes/buttons/hats on the gamepad...
+
+        axs = UserGamepadInputCounts[0]
+        but = UserGamepadInputCounts[1]
+        hat = UserGamepadInputCounts[2]
+
+        if but == 10:
+            if UserGamepadName.find("dual")>-1 or UserGamepadName.find("shock")>-1:
+                return "ps5"
+            return "xbox"
+        if axs==2 and but==15:
+            if UserGamepadName.find("left")>-1:
+                return "ljoycon" 
+            return "rjoycon"
+        if hat==4:
+            if UserGamepadName.find("dual")>-1 or UserGamepadName.find("shock")>-1:
+                return "ps4"
+            return "switchpro"
+        if but==13:
+            return 'ps4_pygame1x'
+        
+        #we didn't detect anything! -- it's probably xbox?
+        if platform.system().lower().find("window")>-1:
+            return "xbox_windows" #it probably uses DirectInput instead of XInput?
+        return "xbox" #unix systems are fine
+
+
     joysticks = {}
     ButtonDelay = 0.1
+
+
+##Core script
     while True: #oh boy here we go!
         time.sleep(FPSTime)
         if ButtonDelay > 0:
@@ -236,18 +317,26 @@ def GuiPad(GuiPadiniFile:str = None):
         for event in pygame.event.get():
             if event.type == pygame.JOYDEVICEADDED:
                 joy = pygame.joystick.Joystick(event.device_index)
-                joysticks[joy.get_instance_id()] = joy
-                if PrintDebugInfo:
-                    print(f"Joystick {joy.get_instance_id()} connencted")
+                joydata = [joy.get_name(), [joy.get_numaxes(), joy.get_numbuttons(), joy.get_numhats()]]
+                GamepadMapID = GetGamepadMapIDFromName(joydata[0],joydata[1])
+                joysticks[joy.get_instance_id()] = [ joy,GamepadMaps[GamepadMapID]]
+                #if PrintDebugInfo:
+                print(f"Joystick {joy.get_instance_id()} is has the Name:")
+                print(f"{joy.get_name()}") 
+                print(f"...and connencted as map type: {GamepadMapID}")
             if event.type == pygame.JOYDEVICEREMOVED:
                 del joysticks[event.instance_id]
-                if PrintDebugInfo:
-                    print(f"Joystick {event.instance_id} disconnected")
+                #if PrintDebugInfo:
+                print(f"Joystick {event.instance_id} disconnected")
 #Detect inputs:         
-        for joystick in joysticks.values():
+        for joystickdata in joysticks.values():
+            joystick = joystickdata[0]
+            joystickMAP = joystickdata[1] #[ axisref, buttonref, hatref]        #if hatref = 4 then they are buttons, if hatref=2 then it is a right[-1,0,1],up[-1,0,1]
+
             axes = joystick.get_numaxes()
             buttons = joystick.get_numbuttons()
             hats = joystick.get_numhats()
+
 
             if PrintDebugInfo:
                 print(f"Joystick {joystick.get_instance_id()}")
@@ -258,14 +347,16 @@ def GuiPad(GuiPadiniFile:str = None):
                 print(f"Number of hats: {hats}")
                 print(f"Number of buttons: {buttons}")
 
-            ButtonDelay = HandleControllerSticks(joystick, axes, ButtonDelay)
+            ButtonDelay = HandleControllerSticks(joystick, joystickMAP[0], axes, ButtonDelay)
             for i in range(buttons):
                 button = joystick.get_button(i)
                 ButtonID = int(f"{i:>2}")
-                ButtonDelay = HandleControllerButtons(joystick, ButtonID, button, ButtonDelay)
+                ButtonDelay = HandleControllerButtons(joystick, joystickMAP[1], ButtonID, button, ButtonDelay)
                 if PrintDebugInfo:
-                    print(f"Button {i:>2} value: {button}")
-            ButtonDelay = HandleDPad(joystick, hats, ButtonDelay)
+                    print(f"Button {joystickMAP[1][ButtonID]} value: {button}")
+
+            #handledpad is different for switch type!
+            ButtonDelay = HandleDPad(joystick, joystickMAP[2], hats, ButtonDelay)
 
 def MakeGuiPadini(Directory:str=None,Name:str="GuiPad.ini"):
     """Makes a GuiPad.ini file to be provided in RunGuiPad(ini_path)
@@ -291,10 +382,69 @@ def MakeGuiPadini(Directory:str=None,Name:str="GuiPad.ini"):
             "DeadzoneR = 450 \n",
             "#FPSTime is /1000000, so 1600 is 60FPS \n",
             "FPSTime = 1600 \n",
-            '#Some gamepads make Axis 3 Right Trigger instead of Right Stick X. If you have problems, try setting Axis2IsLeftTrigger to "True" or "False": \n'
-            "Axis2IsLeftTrigger = Auto"
+            
+            '#Rebind your controls: \n'
+            "RebindButtons = B1|B2|B3|B4|B5|B6|B7|B8|B9|None|None|None|None|None|None|\n"
         ])
     print(f"GuiPad.ini file written to {os.path.join(Directory,Name)}")
+
+def MapGamepad(GamepadName=False,MapType=False):
+    """Manually set the button map for your controller type, GuiPad will remember the name of your controller type
+    GuiPad tries to predict your controller's button map based on https://www.pygame.org/docs/ref/joystick.html
+    If GuiPad is incorrectly mapping your controller, use this function to manually set the map.
+
+    1. Run GuiPad() and get the full exact Name of the gamepad
+    2. Run MapGamepad function with no inputs, and get a list of controller MapTypes
+    3. Run MapGamepad(Name, MapType) 
+
+    Args: 
+        GamepadName (str): Name of your gamepad. Leave empty for help. 
+        MapType(str): Name of your Map. Leave empty to delete an entry (assuming it exists).
+
+    Output: Sets your gamepad's MapType
+    """
+
+    GamepadMapName = MapType
+    if not GamepadName:
+        GamepadMapName="Help for gamepad mapping." 
+    if GamepadMapName and not GamepadMapName in GamepadMaps.keys():
+        print("The first variable should be a gamepad Name, the second variable is a MapType (or false to delete mapping for named gamepad)") 
+        print("Get gamepad Name from running Guipad (they will be printed)")
+        print("Gamepad MapType is not recognised, please select one from:")
+        for m in GamepadMaps.keys():
+            print(m)
+        print("Rerun this function with as MapGamepad(GamepadName, MapType)")
+
+    elif GamepadName:
+        originalwd = os.getcwd()
+        os.chdir( os.path.dirname(os.path.realpath(__file__)) )
+        if not os.path.exists(os.path.join(os.getcwd(),"GamepadMappings.py")):
+            open("GamepadMappings.py", "w").close() #create new empty file if one doesnt' exist
+
+        NewFileContents = ['"""\n']
+        with open("GamepadMappings.py","r") as gamepadmappingfile:
+            AlreadySetNewValue = False
+            for line in gamepadmappingfile:
+                NewLine = line
+                if line.find("!!!@")>-1:
+                    if line.find(GamepadName.strip()+"!!!@") == 0:  #replace only if we exactly match the name
+                        NewLine = "_remove"
+                        if GamepadMapName and not AlreadySetNewValue:
+                            NewLine = f"{GamepadName.strip()}!!!@{GamepadMapName}\n"#rewrite line
+                        AlreadySetNewValue = True
+                    if NewLine != "_remove":
+                        NewFileContents.append(NewLine)
+            if GamepadMapName and not AlreadySetNewValue:
+                print("NewLine")
+                NewFileContents.append(f"{GamepadName.strip()}!!!@{GamepadMapName}\n") #create a new line if we aren't replacing an old one
+
+        with open("GamepadMappings.py","w") as gamepadmappingfile:
+            NewFileContents.append('\n"""')
+            gamepadmappingfile.writelines(NewFileContents)
+
+        os.chdir(originalwd)
+        print("New gamepad mapping Set.")
+
 
 if __name__ == "__main__":
     GuiPad("cwd")
