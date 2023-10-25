@@ -26,7 +26,7 @@ Generate a standard settings file using:
 import os
 import GuiPad
 Make_In_Directory = os.path.join("C:\\Users","JackLawrenceCRISPR","Desktop","Folder") #put your own deployment directory!
-MakeGuiPadini(Make_In_Directory, "GuiPad.ini")  #you can also choose a custom name
+GuiPad.MakeGuiPadini(Make_In_Directory, "GuiPad.ini")  #you can also choose a custom name
 ```
 Edit the .ini file to your preference then provide  
 _Path = os.path.join("C:\\Users","JackLawrenceCRISPR","Desktop","Folder","GuiPad.ini")_ in your _GuiPad.GuiPad(Path)_
@@ -52,5 +52,14 @@ _Path = os.path.join("C:\\Users","JackLawrenceCRISPR","Desktop","Folder","GuiPad
 | Select button | Ctrl + C | Copy |
 | Start button | Ctrl + V | Paste |
 
-**Do not hold the right stick down on startup.**  
-It's used in a neat hack to automatically detect your controller type.
+## Button Mapping
+Different gamepad types combined with different operating systems/drivers can cause button mapping inconsistencies.  
+Manually set your map if the shoulder and stick buttons on your gamepad are misaligned with the table above.  
+For example, a gamepad called "Controller (HORIPAD S)" could use the "xbox_windows" map which would be applied as:  
+```GuiPad.MapGamepad("Controller (HORIPAD S)","xbox_windows")```  
+
+The following command will provide further guidance for button mapping:
+```python
+import GuiPad
+GuiPad.MapGamepad()
+```
