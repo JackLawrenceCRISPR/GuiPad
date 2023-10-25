@@ -51,6 +51,7 @@ _Path = os.path.join("C:\\Users","JackLawrenceCRISPR","Desktop","Folder","GuiPad
 | Right stick | Alt + Right | Go forward |
 | Select button | Ctrl + C | Copy |
 | Start button | Ctrl + V | Paste |
+| Middle button | Enter | Apply |
 
 ## Button Mapping
 Different gamepad types combined with different operating systems/drivers can cause button mapping inconsistencies.  
