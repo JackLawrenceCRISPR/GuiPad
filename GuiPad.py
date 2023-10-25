@@ -5,7 +5,7 @@ GamepadMaps = {
     'rjoycon': [[1, 0], [0, 1, 2, 3, 4, 5, False, False, False, 6, False, 8, 7, False, 9, 10]], 
     'switchpro': [[0, 1, 2, 3, 4, 5], [0, 1, 2, 3, 6, 10, 7, 8, 9, 4, 5, False, False, False, False, 11], [0, 1, 2, 3]],  #12,13,14,15
     'xbox_windows': [[0, 1, 2, 3, 4, 5], [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [1, 0]], 
-    'xbox': [[0, 1, 4, 2, 3, 5], [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [1, 0]], 
+    'xbox': [[0, 1, 4, 2, 3, 5], [0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 8], [1, 0]], 
     'ps4': [[0, 1, 2, 3, 4, 5], [0, 1, 2, 3, 6, 7, 10, 8, 9, 4, 5, False, False, False, False, 11], [3, 2, 0, 1]], 
     'ps5': [[0, 1, 4, 2, 3, 5], [0, 1, 2, 3, 4, 5, False, False, 6, 7, 10, 8, 9], [1, 0]], 
     'xbox_pygame1x': [[0, 1, 5, 3, 2], [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], [1, 0]], 
@@ -152,7 +152,7 @@ def GuiPad(GuiPadiniFile:str = None):
 ## Input handling
     def HandleControllerButtons(joystick, joystickMAP, ButtonID, Pressed, ButtonDelay): #"joystick" argument only included for consistency
         ButtonID = joystickMAP[ButtonID]
-        if Pressed == 1 and ButtonDelay < 0 and len(ListOfButtonFunctions)>=ButtonID:
+        if Pressed == 1 and ButtonDelay < 0 and len(ListOfButtonFunctions)>ButtonID: #should be one bigger (since it starts from zero)
             ListOfButtonFunctions[ButtonID]()
             #print(ButtonID) #, Pressed)
             return ButtonDelayTime
