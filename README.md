@@ -17,7 +17,9 @@ Use ```pip install GuiPad``` in your Operating System terminal, then in a python
 import GuiPad
 GuiPad.GuiPad()
 ```
-https://pypi.org/project/GuiPad/
+https://pypi.org/project/GuiPad/  
+
+**_Linux desktops based on Wayland (piOS as of 10-10-2023, Debian 12.0+/Bookworm, etc) are not currently supported._**
 
 ## Configuration
 A settings.ini file can be used in Guipad.Guipad("PathToSettings.ini") for additional customisation.  
