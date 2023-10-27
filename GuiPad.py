@@ -249,7 +249,7 @@ def GuiPad(GuiPadiniFile:str = None):
         originalwd = None
 
         for l in RawGamepadMappingSettings:
-            if l.find("!!!@")>-1:
+            if "!!!@" in l:
                 LineGamepadName = l[:l.find("!!!@")].strip() 
                 if UserGamepadName.strip()  == LineGamepadName:
                     return l[l.find("!!!@")+4:].strip()
@@ -259,22 +259,21 @@ def GuiPad(GuiPadiniFile:str = None):
         UserGamepadName = UserGamepadName.lower()
         ##Guess gamepad map by name of the gamepad...
         import platform
-        if UserGamepadName.find("xbox")>-1 or UserGamepadName.find("microsoft")>-1 or UserGamepadName.find("horipad")>-1:
-            if platform.system().lower().find("window")>-1:
+        if any([ x in UserGamepadName for x in ["xbox","microsoft","horipad"] ]):
+            if "window" in platform.system().lower():
                 return "xbox_windows" #it probably uses DirectInput instead of XInput?
             return "xbox"
-        if UserGamepadName.find("ps4")>-1 or UserGamepadName.find("dualshock4")>-1 or UserGamepadName.find("dualshock 4")>-1 or UserGamepadName.find("playstation 4")>-1 or UserGamepadName.find("playstation4")>-1:
-            return "ps4"
-        if UserGamepadName.find("ps5")>-1 or UserGamepadName.find("dualshock5")>-1 or UserGamepadName.find("dualshock 5")>-1 or UserGamepadName.find("playstation 5")>-1 or UserGamepadName.find("playstation5")>-1:
+        if any([ x in UserGamepadName for x in ["ps5","dualshock5","dualshock 5","playstation 5","playstation5"] ]):
             return "ps5"
-        if UserGamepadName.find("ps3")>-1 or UserGamepadName.find("dualshock3")>-1 or UserGamepadName.find("dualshock 3")>-1 or UserGamepadName.find("sony")>-1 or UserGamepadName.find("playstation 3")>-1 or UserGamepadName.find("playstation3")>-1:
-            return "ps4"    #ps3 controllers map as ps4
-        if UserGamepadName.find("joycon")>-1:
-            if UserGamepadName.find("left")>-1:
+        if any([ x in UserGamepadName for x in ["ps4","ps3","ps2","dualshock","playstation","sony"] ]):
+            return "ps4"
+        
+        if "joycon" in UserGamepadName:
+            if "left" in UserGamepadName:
                 return "ljoycon"
             else:
                 return "rjoycon"
-        if UserGamepadName.find("switch")>-1 and UserGamepadName.find("pro")>-1:
+        if "switch" in UserGamepadName and "pro" in UserGamepadName:
             return "switchpro"
 
         #we didn't find any keywords in the gamepad name!
@@ -285,22 +284,22 @@ def GuiPad(GuiPadiniFile:str = None):
         hat = UserGamepadInputCounts[2]
 
         if but == 10:
-            if UserGamepadName.find("dual")>-1 or UserGamepadName.find("shock")>-1:
+            if "dual" in UserGamepadName or "shock" in UserGamepadName:
                 return "ps5"
             return "xbox"
         if axs==2 and but==15:
-            if UserGamepadName.find("left")>-1:
+            if "left" in UserGamepadName:
                 return "ljoycon" 
             return "rjoycon"
         if hat==4:
-            if UserGamepadName.find("dual")>-1 or UserGamepadName.find("shock")>-1:
+            if "dual" in UserGamepadName or "shock" in UserGamepadName:
                 return "ps4"
             return "switchpro"
         if but==13:
             return 'ps4_pygame1x'
         
         #we didn't detect anything! -- it's probably xbox?
-        if platform.system().lower().find("window")>-1:
+        if "window" in platform.system().lower():
             return "xbox_windows" #it probably uses DirectInput instead of XInput?
         return "xbox" #unix systems are fine
 
@@ -426,7 +425,7 @@ def MapGamepad(GamepadName=False,MapType=False):
             AlreadySetNewValue = False
             for line in gamepadmappingfile:
                 NewLine = line
-                if line.find("!!!@")>-1:
+                if "!!!@" in line:
                     if line.find(GamepadName.strip()+"!!!@") == 0:  #replace only if we exactly match the name
                         NewLine = "_remove"
                         if GamepadMapName and not AlreadySetNewValue:
@@ -444,6 +443,79 @@ def MapGamepad(GamepadName=False,MapType=False):
 
         os.chdir(originalwd)
         print("New gamepad mapping Set.")
+
+
+def CreateShortcut():
+    import platform
+    if "window" in platform.system().lower():
+        print("Windows OS detected, creating shortcut...")
+
+    #Make Batch file to run GuiPad...
+        import sys
+        PythonExePath = sys.executable
+        #note - "{PythonExePath}" can be "python" if PYTHONPATH is available on windows
+        originalwd = os.getcwd()
+        os.chdir( os.path.dirname(os.path.realpath(__file__)) )
+        with open("GuiPad.bat","w") as gamepadmappingfile:
+            gamepadmappingfile.writeline(f"""echo off & {PythonExePath} -x "%~f0" %* & goto :eof \nimport GuiPad;\nGuiPad.GuiPad()""")
+        BatchFile = os.path.join(os.getcwd(),"GuiPad.bat")
+
+        try:
+            print("Attempting to get icon")
+            import urllib.request
+            urllib.request.urlretrieve("https://raw.githubusercontent.com/JackLawrenceCRISPR/GuiPad/main/Icons/GuiPad_Icon.ico", "GuiPad_Logo.ico")
+        except:
+            print("Failed to get icon...")
+            print('You can download an icon for your shortcut at: https://github.com/JackLawrenceCRISPR/GuiPad/blob/main/Icons/GuiPad_Icon.ico"')
+        os.chdir(originalwd)
+
+    #python -m pip install pywin32
+        MakeStandardShortcut = True
+        try:
+            from win32com.client import Dispatch
+        except ImportError:
+            print("WindowsAPI (pywin32) module not found.")
+            print("GuiPad can help you quickly make your own shortcut")
+            print("OR it can be automatically generated if you let GuiPad install pywin32")
+            print("if you would like to install pywin32 type 'y' type 'n' for guidance")
+            if input()[:1].lower()==("y"):
+                import subprocess
+                subprocess.run([sys.executable, "-m", "pip", "install", "pywin32"], check=True) 
+                from win32com.client import Dispatch
+            else:
+                MakeStandardShortcut = False
+                print(f"Right click any file and find 'send to' -> 'desktop (shortcut)'")
+                print(f"Now right click the shortcut you just made on your desktop and go to 'properties'")
+                print('Finally set "Target" to: "{BatchFile}"')
+                print("Press enter several times to close this terminal when you are done...")
+                print(f"If the icon downloaded successfully it is on your pc already at {os.path.join(os.path.dirname(BatchFile), 'GuiPad_Logo.ico')}")
+                print("if the icon failed to dnwload see above to find where you can download one.")
+                input()
+                input()
+                
+
+    #Make Shortcut to batch file...
+        if MakeStandardShortcut:
+            #create windows shortcut from: https://www.blog.pythonlibrary.org/2010/01/23/using-python-to-create-shortcuts/
+            shell = Dispatch('WScript.Shell')
+            shortcut = shell.CreateShortCut(os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop') )
+            shortcut.Targetpath = BatchFile
+            shortcut.WorkingDirectory = os.path.dirname(BatchFile)
+            if os.path.join(os.path.dirname(BatchFile), "GuiPad_Logo.ico"):
+                shortcut.IconLocation = os.path.join(os.path.dirname(BatchFile), "GuiPad_Logo.ico")
+            shortcut.save()
+        print("A shortcut has been generated on your Desktop.")
+        input()
+    else:
+        print("Unix system detected, creating desktop python file...")
+        os.chdir(os.path.join(os.path.join(os.path.expanduser('~')), 'Desktop') ) #Linux Desktop
+        with open("Launch_GuiPad.py","w") as gamepadmappingfile:
+            gamepadmappingfile.writeline(f"import GuiPad;\nGuiPad.GuiPad()")
+        print("Go to your menu editor (in preferences) and add 'New Item'")
+        print("" )
+        print("Modify the targ" )
+
+        print("Download an icon at https://github.com/JackLawrenceCRISPR/GuiPad/blob/main/Icons/GuiPad_Logo.svg'")
 
 
 if __name__ == "__main__":
